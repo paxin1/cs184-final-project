@@ -4,14 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="CS 184 final project proposal: post-processing shaders for Star Stable Online in ReShade." />
-    <title>Stable Lighting · CS 184 Final Project Proposal</title>
+    <title>Star Shaders · CS 184 Final Project Proposal</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
     <div class="page">
       <header>
         <p class="course">CS 184 Final Project Proposal - Fall 2026</p>
-        <h1>Stable Lighting</h1>
+        <h1>Star Shaders</h1>
         <p class="full-title">Stackable post-processing shaders for <em>Star Stable Online</em> in ReShade</p>
         <p class="team">Laura Nagamine, Patrick Xu, Elena Lepe, Oscar Mendoza-Oliva</p>
       </header>
@@ -59,10 +59,11 @@
 
         <h2 id="goals">Goals and Deliverables</h2>
         <p>
-          The final demo is live gameplay with the ReShade overlay open. We'll ride around, toggle
-          individual effects, and switch between presets while the frame time shows on screen.
-          Alongside the demo we'll have before/after screenshots from fixed camera positions and a
-          short video.
+          The final demo will be a live gameplay session with the ReShade overlay open. While
+          playing the game, we will toggle individual effects on and off and switch between
+          presets, with the frame time displayed on screen.
+          Alongside the demo, we will provide before/after screenshots from fixed camera positions
+          and a short video.
         </p>
 
         <h3>Measuring quality and performance</h3>
@@ -93,13 +94,17 @@
         </ul>
 
         <h3>(1) Baseline plan</h3>
+        <p>We will implement at least four of the following shaders:</p>
         <ul>
-          <li>Shared header: depth linearization, position/normal reconstruction, debug views</li>
           <li>SSAO (horizon-based) with a depth-aware blur</li>
           <li>Bloom with a soft threshold and a downsample/upsample blur chain</li>
           <li>Depth of field with an adjustable focus distance and a gather-based blur</li>
           <li>Post-process anti-aliasing (FXAA/SMAA style edge detection)</li>
           <li>Tonemapping, LUT color grading, vignette, and film grain</li>
+        </ul>
+        <p>In addition, the baseline includes:</p>
+        <ul>
+          <li>A shared header: depth linearization, position/normal reconstruction, debug views</li>
           <li>At least three presets that combine the passes in different ways</li>
           <li>Demo, comparison images, performance numbers, and the final writeup</li>
         </ul>
@@ -128,10 +133,11 @@
               <td>Week 12<br />Nov 9–15</td>
               <td>
                 <ul>
-                  <li>Proposal (due Nov 10)</li>
-                  <li>Get ReShade running on Star Stable and check depth access. Pick a fallback target if needed</li>
-                  <li>Repo, shader template, shared header, debug views</li>
-                  <li>First version of bloom; start SSAO</li>
+                  <li><strong>Proposal due Nov 10</strong></li>
+                  <li>Set up ReShade on Star Stable and confirm depth buffer access (choose a fallback target if needed)</li>
+                  <li>Set up the repo, shader template, and shared header (depth, positions, normals, debug views)</li>
+                  <li>Shader 1 (Bloom)</li>
+                  <li>Begin Shader 2 (Ambient Occlusion)</li>
                 </ul>
               </td>
             </tr>
@@ -139,10 +145,10 @@
               <td>Week 13<br />Nov 16–22</td>
               <td>
                 <ul>
-                  <li>Finish SSAO and blur</li>
-                  <li>Depth of field</li>
-                  <li>Anti-aliasing</li>
-                  <li>Milestone webpage + video (due Nov 22)</li>
+                  <li>Finish Shader 2 (Ambient Occlusion)</li>
+                  <li>Shader 3 (Depth of Field)</li>
+                  <li>Shader 4 (Anti-Aliasing)</li>
+                  <li><strong>Milestone webpage and video due Nov 22</strong></li>
                 </ul>
               </td>
             </tr>
@@ -150,9 +156,10 @@
               <td>Week 14<br />Nov 23–29</td>
               <td>
                 <ul>
-                  <li>Tonemapping, color grading, overlay effects</li>
-                  <li>Try different pass orders and build the presets</li>
-                  <li>Start on SSGI or volumetric fog</li>
+                  <li>Shader 5 (Tonemapping and Color Grading)</li>
+                  <li>Test pass orders and build the presets</li>
+                  <li>Incorporate milestone feedback (returned Nov 25)</li>
+                  <li>Begin stretch goals: Screen-Space GI or Volumetric Fog</li>
                 </ul>
               </td>
             </tr>
@@ -160,9 +167,11 @@
               <td>Week 15<br />Nov 30–Dec 6</td>
               <td>
                 <ul>
-                  <li>Finish whatever stretch goals we can</li>
+                  <li>Finish stretch goals as time allows</li>
                   <li>Performance measurements and PSNR/SSIM comparisons</li>
-                  <li>Final video and report (due Dec 6); prepare the presentation (Dec 7–8)</li>
+                  <li>Record the demo, capture comparison images</li>
+                  <li><strong>Final video and report due Dec 6</strong></li>
+                  <li><strong>Final presentations Dec 7–8</strong></li>
                 </ul>
               </td>
             </tr>
