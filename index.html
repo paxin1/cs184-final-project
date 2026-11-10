@@ -3,101 +3,214 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="CS 184 final project proposal." />
-    <title>CS 184 Final Project Proposal</title>
+    <meta name="description" content="CS 184 final project proposal: post-processing shaders for Star Stable Online in ReShade." />
+    <title>Stable Lighting · CS 184 Final Project Proposal</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <header class="site-header">
-      <p class="course-label">CS 184 · Final Project Proposal</p>
-      <h1>Project title</h1>
+    <div class="page">
+      <header>
+        <p class="course">CS 184 Final Project Proposal - Fall 2026</p>
+        <h1>Stable Lighting</h1>
+        <p class="full-title">Stackable post-processing shaders for <em>Star Stable Online</em> in ReShade</p>
+        <p class="team">Laura Nagamine, Patrick Xu, Elena Lepe, Oscar Mendoza-Oliva</p>
+      </header>
 
-      <h2 class="inline-heading">Summary</h2>
-      <div class="section-body"></div>
+      <main>
+        <h2 id="summary">Summary</h2>
+        <p>
+          We're writing a set of ReShade shaders that run on top of <em>Star Stable Online</em>
+          and change how the game looks without touching its code. Using the frame's color and depth
+          buffers, we'll add ambient occlusion, bloom, depth of field, anti-aliasing, and color
+          grading as separate passes that can be stacked into a few different presets.
+        </p>
 
-      <h2 class="inline-heading">Team members</h2>
-      <ul class="team-members"></ul>
-    </header>
+        <h2 id="problem">Problem Description</h2>
+        <p>
+          ReShade hooks into a game's graphics API and lets you run your own shaders on each frame
+          right before it's shown on screen. People use it to make older games look better, but
+          the shader only gets the finished image, and usually the depth buffer. There are no normals,
+          materials, or light positions. So anything that depends on scene geometry has to be
+          rebuilt from depth. We'll linearize depth, reconstruct view-space positions, and
+          estimate normals from neighboring depth values.
+        </p>
+        <p>
+          This is hard for a few reasons. Screen-space effects can't see anything off-screen or
+          behind other objects, which leads to halos around edges and AO that fades out near
+          the borders of the screen. Things that don't write depth, like the UI, particles, and
+          alpha-tested hair or horse manes, will break the depth-based effects unless we handle them.
+          Everything also has to run in real time on top of the game, so we'll be trading sample
+          counts and resolution against frame time. Finally, the effects affect each other. AO needs
+          to happen before bloom, and DoF should blur the result after that. A bad pass order or
+          the wrong color space can make the combined result look worse than any one effect alone.
+        </p>
+        <p>
+          Our plan is to write one shared header (depth, positions, normals, debug views) and build
+          each effect as its own ReShade technique on top of it. A preset is then just a pass
+          order plus parameter values.
+        </p>
+        <p>
+          The biggest risk: ReShade can turn off depth buffer access in online games when it sees
+          network traffic, and most of our effects need depth. The first thing we'll do is check
+          whether depth works in <em>Star Stable Online</em>. If it doesn't, we'll develop and test the
+          depth effects on a single-player DX11 game or a small test scene. Bloom, AA, and color
+          grading only need the color buffer, so those will still run on Star Stable.
+        </p>
 
-    <main>
-      <section id="problem" aria-labelledby="problem-heading">
-        <h2 id="problem-heading">Problem description</h2>
-        <div class="section-body"></div>
-      </section>
+        <h2 id="goals">Goals and Deliverables</h2>
+        <p>
+          The final demo is live gameplay with the ReShade overlay open. We'll ride around, toggle
+          individual effects, and switch between presets while the frame time shows on screen.
+          Alongside the demo we'll have before/after screenshots from fixed camera positions and a
+          short video.
+        </p>
 
-      <section id="goals" aria-labelledby="goals-heading">
-        <h2 id="goals-heading">Goals and deliverables</h2>
+        <h3>Measuring quality and performance</h3>
+        <ul>
+          <li>
+            GPU time per effect and for the whole stack at 1080p, using ReShade's performance
+            stats. We'll note which GPU each number came from. We'd like the full baseline stack
+            to cost under about 5 ms.
+          </li>
+          <li>
+            For AO and DoF, we'll run each shader with very high sample counts to get a reference
+            image, then compute PSNR/SSIM of our real-time settings against it.
+          </li>
+          <li>
+            Side-by-side comparisons and zoomed crops (especially for AA and depth edges), plus
+            notes on artifacts we see, like halos, banding, flickering in motion, and effects
+            bleeding onto the UI.
+          </li>
+        </ul>
 
-        <h3>Questions to answer</h3>
-        <div class="section-body"></div>
+        <h3>Questions we want to answer</h3>
+        <ul>
+          <li>How close can we get to "modern" lighting with only color and depth?</li>
+          <li>How good are normals reconstructed from depth, and how much does their error show up in AO?</li>
+          <li>For each effect, at what point do more samples stop making a visible difference?</li>
+          <li>What pass order (and linear vs. gamma space) gives the best combined look?</li>
+          <li>Where does plain ReShade stop being enough, and what extra data would we need?</li>
+        </ul>
 
-        <h3>Quality and performance metrics</h3>
-        <div class="section-body"></div>
+        <h3>(1) Baseline plan</h3>
+        <ul>
+          <li>Shared header: depth linearization, position/normal reconstruction, debug views</li>
+          <li>SSAO (horizon-based) with a depth-aware blur</li>
+          <li>Bloom with a soft threshold and a downsample/upsample blur chain</li>
+          <li>Depth of field with an adjustable focus distance and a gather-based blur</li>
+          <li>Post-process anti-aliasing (FXAA/SMAA style edge detection)</li>
+          <li>Tonemapping, LUT color grading, vignette, and film grain</li>
+          <li>At least three presets that combine the passes in different ways</li>
+          <li>Demo, comparison images, performance numbers, and the final writeup</li>
+        </ul>
 
-        <div class="goals-part">
-          <h3>(1) Planned deliverables — baseline</h3>
-          <div class="section-body"></div>
-        </div>
+        <h3>(2) Aspirational plan</h3>
+        <ul>
+          <li>Screen-space GI: ray march the depth buffer for one bounce of indirect color</li>
+          <li>Volumetric fog and light shafts, maybe with animated noise for mist or clouds</li>
+          <li>Temporal accumulation so AO/GI can use fewer samples per frame</li>
+          <li>
+            A ReShade add-on (or fork) that exposes more than color and depth, like normals or HDR
+            color. We'd only try this on an offline test target.
+          </li>
+        </ul>
 
-        <div class="goals-part">
-          <h3>(2) Hope to deliver — aspirational</h3>
-          <div class="section-body"></div>
-        </div>
-      </section>
-
-      <section id="schedule" aria-labelledby="schedule-heading">
-        <h2 id="schedule-heading">Schedule</h2>
-        <table class="schedule-table">
+        <h2 id="schedule">Schedule</h2>
+        <table>
           <thead>
             <tr>
-              <th scope="col">Week</th>
-              <th scope="col">Dates</th>
-              <th scope="col">Tasks</th>
+              <th>Week</th>
+              <th>Tasks</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>1</td>
-              <td></td>
-              <td></td>
+              <td>Week 1<br />Nov 9–15</td>
+              <td>
+                <ul>
+                  <li>Proposal (due Nov 10)</li>
+                  <li>Get ReShade running on Star Stable and check depth access. Pick a fallback target if needed</li>
+                  <li>Repo, shader template, shared header, debug views</li>
+                  <li>First version of bloom; start SSAO</li>
+                </ul>
+              </td>
             </tr>
             <tr>
-              <td>2</td>
-              <td></td>
-              <td></td>
+              <td>Week 2<br />Nov 16–22</td>
+              <td>
+                <ul>
+                  <li>Finish SSAO and blur</li>
+                  <li>Depth of field</li>
+                  <li>Anti-aliasing</li>
+                  <li>Milestone webpage + video (due Nov 22)</li>
+                </ul>
+              </td>
             </tr>
             <tr>
-              <td>3</td>
-              <td></td>
-              <td></td>
+              <td>Week 3<br />Nov 23–29</td>
+              <td>
+                <ul>
+                  <li>Tonemapping, color grading, overlay effects</li>
+                  <li>Try different pass orders and build the presets</li>
+                  <li>Start on SSGI or volumetric fog</li>
+                </ul>
+              </td>
             </tr>
             <tr>
-              <td>4</td>
-              <td></td>
-              <td></td>
+              <td>Week 4<br />Nov 30–Dec 6</td>
+              <td>
+                <ul>
+                  <li>Finish whatever stretch goals we can</li>
+                  <li>Performance measurements and PSNR/SSIM comparisons</li>
+                  <li>Final video and report (due Dec 6); prepare the presentation (Dec 7–8)</li>
+                </ul>
+              </td>
             </tr>
           </tbody>
         </table>
-      </section>
 
-      <section id="resources" aria-labelledby="resources-heading">
-        <h2 id="resources-heading">Resources</h2>
+        <h2 id="resources">Resources</h2>
 
-        <h3>References (papers, books, online)</h3>
-        <div class="section-body"></div>
+        <h3>References</h3>
+        <ol class="references">
+          <li>
+            ReShade and the ReShade FX language reference:
+            <a href="https://reshade.me">reshade.me</a>,
+            <a href="https://github.com/crosire/reshade-shaders/blob/slim/REFERENCE.md">github.com/crosire/reshade-shaders</a>
+          </li>
+          <li>Akenine-Möller et al., <em>Real-Time Rendering</em>, 4th ed., 2018</li>
+          <li>Mittring, "Finding Next Gen: CryEngine 2," SIGGRAPH 2007 course</li>
+          <li>Bavoil, Sainz, Dimitrov, "Image-Space Horizon-Based Ambient Occlusion," SIGGRAPH 2008 talk</li>
+          <li>Jimenez et al., "Practical Real-Time Strategies for Accurate Indirect Occlusion," SIGGRAPH 2016 course</li>
+          <li>Jimenez, "Next Generation Post Processing in Call of Duty: Advanced Warfare," SIGGRAPH 2014 course</li>
+          <li>Hammon, "Practical Post-Process Depth of Field," <em>GPU Gems 3</em>, ch. 28, 2007</li>
+          <li>Lottes, "FXAA," NVIDIA white paper, 2009</li>
+          <li>Jimenez et al., "SMAA: Enhanced Subpixel Morphological Antialiasing," Eurographics 2012</li>
+          <li>McGuire, Mara, "Efficient GPU Screen-Space Ray Tracing," JCGT 2014</li>
+          <li>Hillaire, "Physically Based and Unified Volumetric Rendering in Frostbite," SIGGRAPH 2015 course</li>
+        </ol>
 
         <h3>Computing platform, hardware, and software</h3>
-        <div class="section-body"></div>
+        <p>
+          ReShade only runs on Windows, so development and testing will happen on our Windows
+          10/11 PCs with discrete GPUs. The shaders are written in ReShade FX, which is basically
+          HLSL. We'll also use RenderDoc to debug frames, OBS to record video, Python
+          (scikit-image) for PSNR/SSIM, and GitHub for version control.
+        </p>
 
-        <h3>Existing code or systems (if any)</h3>
-        <div class="section-body"></div>
-      </section>
-    </main>
+        <h3>Existing code</h3>
+        <p>
+          We're building on <a href="https://github.com/crosire/reshade">ReShade</a>. It handles
+          hooking into the game, the in-game UI, and running effects, and its
+          <code>ReShade.fxh</code> header gives us depth buffer access and fullscreen passes. We'll
+          look at the official <a href="https://github.com/crosire/reshade-shaders">reshade-shaders</a>
+          repo for conventions and how the API is used, but we're writing the effects ourselves.
+        </p>
+      </main>
 
-    <footer class="site-footer">
-      <p>
+      <footer>
         <a href="https://github.com/paxin1/cs184-final-project">Source on GitHub</a>
-      </p>
-    </footer>
+      </footer>
+    </div>
   </body>
 </html>
