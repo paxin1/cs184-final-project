@@ -21,7 +21,7 @@
         <p>
           We're writing a set of ReShade shaders that run on top of <em>Star Stable Online</em>
           and change how the game looks without touching its code. Using the frame's color and depth
-          buffers, we'll add ambient occlusion, bloom, depth of field, anti-aliasing, and color
+          buffers, we'll add ambient occlusion (AO), bloom, depth of field (DoF), anti-aliasing (AA), and color
           grading as separate passes that can be stacked into a few different presets.
         </p>
 
@@ -91,6 +91,8 @@
           <li>For each effect, at what point do more samples stop making a visible difference?</li>
           <li>What pass order (and linear vs. gamma space) gives the best combined look?</li>
           <li>Where does plain ReShade stop being enough, and what extra data would we need?</li>
+          <li>Can different pass orders introduce artifacts that are not present in any single effect alone?</li>
+          <li>What are the tradeoffs between performance and quality for each effect?</li>
         </ul>
 
         <h3>(1) Baseline plan</h3>
@@ -117,6 +119,10 @@
           <li>
             A ReShade add-on (or fork) that exposes more than color and depth, like normals or HDR
             color. We'd only try this on an offline test target.
+          </li>
+          <li>
+            Second-game profile: support one fallback game with a saved profile + depth definitions + default preset. Measure
+            how much preset reuse is possible versus per-game retuning, optionally with a helper to apply saved profiles.
           </li>
         </ul>
 
@@ -197,6 +203,8 @@
           <li>Jimenez et al., "SMAA: Enhanced Subpixel Morphological Antialiasing," Eurographics 2012</li>
           <li>McGuire, Mara, "Efficient GPU Screen-Space Ray Tracing," JCGT 2014</li>
           <li>Hillaire, "Physically Based and Unified Volumetric Rendering in Frostbite," SIGGRAPH 2015 course</li>
+          <li>McGuire, Mara, Luebke, "Scalable Ambient Obscurance", HPG 2012</li>
+          <li>Mara, McGuire, Nowrouzezahrai, Luebke, "Deep G-Buffers for Stable Global Illumination Approximation", HPG 2016</li>
         </ol>
 
         <h3>Computing platform, hardware, and software</h3>
