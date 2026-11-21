@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="CS 184 final project milestone: Star Shaders post-processing in ReShade." />
+    <title>Star Shaders · CS 184 Final Project Milestone</title>
+    <link rel="canonical" href="https://paxin1.github.io/cs184-final-project/milestone" />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <p class="course">CS 184 Final Project Milestone - Fall 2026</p>
+        <h1>Star Shaders - Milestone Report</h1>
+        <p class="full-title">Stackable post-processing shaders for <em>Star Stable Online</em> in ReShade</p>
+        <p class="team">Laura Nagamine, Patrick Xu, Elena Lepe, Oscar Mendoza-Oliva</p>
+      </header>
+
+      <main>
+        <h2 id="summary">Summary</h2>
+        <p>
+          At the milestone, we've wired ReShade into <em>Star Stable Online</em> along with other testing targets, confirmed that the game’s
+          depth buffer is available through ReShade, and routed it through our shared <code>Header.fxh</code> as linearized depth
+          (<code>SSO::Depth</code>) for effects and debug views. ReShade also only exposes the final rendered image from the game; for Star Stable Online and other testing target, this is a
+          <strong>SDR color buffer</strong>. This, along with not being able to access contextually relevant scene information directly from the game like normals and light sources,
+          means we have to tweak our own effects to achieve a more realistic look. Nevertheless, we've implemented shared header and baseline effects from the proposal: Bloom, Depth of Field, and Anti-aliasing.
+        </p>
+
+        <h2 id="goals">Milestone Progress</h2>
+
+        <h3>Preliminary results</h3>
+        <ul>
+          <li><em>Milestone video:</em> </li>
+          <li><em>Screenshot set:</em> </li>
+        </ul>
+
+        <h3>Implementation status</h3>
+        <ul>
+          <li>
+            <strong>Shared header</strong> (<code>Header.fxh</code>): linear/sRGB helpers, luminance, depth, debug views.
+          </li>
+          <li>
+            <strong>Bloom</strong> (<code>Bloom.fx</code>; processed in linear light via
+            <code>Header.fxh</code>):
+            <p>Native ReShade only exposes a SDR color buffer, so we implemented Bloom using a soft threshold-based bloom pass with a downsample/upsample mip pyramid.
+            Pixels above a threshold in luminance contribute to the bloom effect, with a soft knee function to soften the transition of the light into the bloom pass.</p>
+
+            <p>The bloom pass is spread through a 7 level mip pyramid as described in Jimenez's paper "Next Generation Post Processing in Call of Duty: Advanced Warfare".
+            The downsample uses a 13 tap downsample, which takes 13 samples from the 4x4 neighborhood around the pixel and averages them to get the downsampled value.
+            The upsample uses a 3x3 tent upsample, which averages the 9 samples in the 3x3 neighborhood as we travel back up the pyramid.
+            The bloom is then composited onto the scene using a screen blend so halos stay visible on a bright daytime sky,
+            lightening the overall scene without clipping.</p>
+
+            <p>Since we do not have access to light sources, we implemented extra tweaks to the bloom effect to help it look more realistic. Local contrast subtracts a blurred
+            neighborhood average before thresholding so compact lights (sun, stars) bloom more
+            than smooth bright regions (sky, clouds). Glow radius and large light source glow use different pyramid levels to boost the bloom effect for large and small light sources respectively.
+            Using the depth buffer, foreground bloom scales glow drawn over non-sky geometry and sky light boost strengthens bloom extracted from far-plane sky pixels.</p>
+          </li>
+          <li>
+            <strong>Depth of field</strong> (<code>DepthOfField.fx</code>): adjustable focus, gather-based bokeh blur.
+          </li>
+          <li>
+            <strong>Anti-aliasing</strong> (<code>AntiAliasing.fx</code>): post-process edge-oriented AA.
+          </li>
+          <li>
+            <strong>SSAO</strong> (horizon-based + depth-aware blur):
+          </li>
+        </ul>
+
+        <h2 id="plan">Updated Plan</h2>
+        <h3>(1) Baseline plan</h3>
+
+        <h4>Completed</h4>
+        <ul>
+          <li>
+            <strong>Shared header</strong> (<code>Header.fxh</code>): linear/sRGB, luminance, linearized depth, debug views.
+          </li>
+          <li>
+            <strong>Bloom</strong> (<code>Bloom.fx</code>, <code>Bloom.md</code>): thresholded bright pass,
+            Jimenez 13-tap / tent mip pyramid, optional starburst, depth-aware sky/foreground controls,
+            screen-blend composite.
+          </li>
+          <li><strong>Depth of field</strong> (<code>DepthOfField.fx</code>): adjustable focus, gather-based bokeh.</li>
+          <li><strong>Anti-aliasing</strong> (<code>AntiAliasing.fx</code>): FXAA/SMAA style edge detection.</li>
+          <li>Milestone demo and comparison images.</li>
+        </ul>
+
+        <h4>Still to do (baseline)</h4>
+        <ul>
+          <li>SSAO (horizon-based) with a depth-aware blur; bring up to the same shared-header stack as the other effects.</li>
+          <li>Tonemapping, LUT color grading, vignette, and film grain (graded on LDR back buffer, not engine HDR).</li>
+          <li>
+            In-game tuning and documentation: Star Stable depth access, bloom/DoF/AA quality vs. performance, artifact notes (UI, clouds, pause).
+          </li>
+          <li>At least three presets that combine passes in different orders and intensities.</li>
+          <li>Final demo and comparison images, performance numbers, and the final writeup.</li>
+        </ul>
+
+        <h3>(2) Aspirational plan</h3>
+        <ul>
+          <li>Screen-space GI: ray march the depth buffer for one bounce of indirect color</li>
+          <li>Volumetric fog and light shafts, maybe with animated noise for mist or clouds</li>
+          <li>Temporal accumulation so AO/GI can use fewer samples per frame</li>
+          <li>
+            A ReShade add-on (or fork) that exposes more than color and depth, like normals or HDR
+            color. We'd only try this on an offline test target.
+          </li>
+          <li>
+            Second-game profile: support one fallback game with a saved profile + depth definitions + default preset. Measure
+            how much preset reuse is possible versus per-game retuning, optionally with a helper to apply saved profiles.
+          </li>
+        </ul>
+      </main>
+
+      <footer>
+        <a href="https://paxin1.github.io/cs184-final-project/">Proposal site</a>
+        ·
+        <a href="https://github.com/lauranagamine1/cs184-star-shaders">Source on GitHub</a>
+      </footer>
+    </div>
+  </body>
+</html>
