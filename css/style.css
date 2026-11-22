@@ -96,6 +96,34 @@ td li {
   margin-bottom: 2px;
 }
 
+figure.compare {
+  max-width: 540px;
+  margin: 0 auto 28px;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.pair img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+}
+
+.pair img.pixelated {
+  image-rendering: pixelated;
+}
+
+figcaption {
+  font-size: 16px;
+  color: #444;
+}
+
 footer {
   margin-top: 40px;
   font-size: 14px;

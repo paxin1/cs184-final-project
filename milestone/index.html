@@ -32,8 +32,48 @@
         <h3>Preliminary results</h3>
         <ul>
           <li><em>Milestone video:</em> </li>
-          <li><em>Screenshot set:</em> </li>
+          <li><em>Screenshot set:</em> before/after captures from <em>Star Stable Online</em> at 2560×1600, ReShade effect off (left) vs. on (right). Click any image to open the full-resolution capture.</li>
         </ul>
+
+        <figure class="compare">
+          <div class="pair">
+            <a href="../assets/milestone/bloom/no%20StarStable%202026-11-21%2012-39-15.png"><img src="../assets/milestone/web/bloom-off.jpg" alt="Forest scene with horse and rider, bloom off" loading="lazy" /></a>
+            <a href="../assets/milestone/bloom/with%20StarStable%202026-11-21%2012-39-17.png"><img src="../assets/milestone/web/bloom-on.jpg" alt="Same forest scene with bloom on" loading="lazy" /></a>
+          </div>
+          <figcaption>
+            <strong>Bloom.</strong> Bright, compact sources pick up a soft halo: the pink crystals and the
+            white blaze on the horse's face glow, while the screen-blend composite
+            lifts highlights without clipping them.
+          </figcaption>
+        </figure>
+
+        <figure class="compare">
+          <div class="pair">
+            <a href="../assets/milestone/depth%20of%20field/no%20StarStable%202026-11-19%2016-48-08.png"><img src="../assets/milestone/web/dof-off.jpg" alt="Horse and rider in a meadow, depth of field off" loading="lazy" /></a>
+            <a href="../assets/milestone/depth%20of%20field/with%20StarStable%202026-11-19%2016-48-13.png"><img src="../assets/milestone/web/dof-on.jpg" alt="Same meadow scene with depth of field on" loading="lazy" /></a>
+          </div>
+          <figcaption>
+            <strong>Depth of field.</strong> Focus is set on the horse and rider; the trees, hills and
+            sky behind them fall into a bokeh blur driven by the linearized depth from <code>Header.fxh</code>.
+          </figcaption>
+        </figure>
+
+        <figure class="compare">
+          <div class="pair">
+            <a href="../assets/milestone/anti%20aliasing/new/StarStable%202026-11-21%2012-31-40.png"><img src="../assets/milestone/web/aa-off.jpg" alt="Close-up of crystal formations, anti-aliasing off" loading="lazy" /></a>
+            <a href="../assets/milestone/anti%20aliasing/new/StarStable%202026-11-21%2012-31-48.png"><img src="../assets/milestone/web/aa-on.jpg" alt="Same crystal close-up with anti-aliasing on" loading="lazy" /></a>
+          </div>
+          <div class="pair">
+            <img class="pixelated" src="../assets/milestone/web/aa-off-zoom.png" alt="2x zoom of a crystal edge showing stair-stepped aliasing" loading="lazy" />
+            <img class="pixelated" src="../assets/milestone/web/aa-on-zoom.png" alt="Same 2x zoom with the edge smoothed by anti-aliasing" loading="lazy" />
+          </div>
+          <figcaption>
+            <strong>Anti-aliasing.</strong> Anti-aliasing is turned off in the game's graphics settings for both shots, so the
+            smoothing shown is from our shader only. The
+            2× nearest-neighbor zoom (bottom) of a crystal silhouette shows the stair-stepped edges being smoothed
+            by our edge-oriented pass, while interior texture detail is left intact.
+          </figcaption>
+        </figure>
 
         <h3>Implementation status</h3>
         <ul>
@@ -59,9 +99,13 @@
           </li>
           <li>
             <strong>Depth of field</strong> (<code>DepthOfField.fx</code>): adjustable focus, gather-based bokeh blur.
+            <p>A first pass computes a signed circle of confusion (CoC) per pixel from linearized depth, the focus distance, and the blur strength.
+            A second pass gathers 64 samples in a golden-angle spiral disk, counting a sample only if its blur disk reaches the pixel,
+            and clamps background samples so they don't bleed over a sharper foreground.</p>
           </li>
           <li>
             <strong>Anti-aliasing</strong> (<code>AntiAliasing.fx</code>): post-process edge-oriented AA.
+            <p>To test it, we turned off anti-aliasing in the game's graphics settings so that any edge smoothing comes from our shader alone.</p>
           </li>
           <li>
             <strong>SSAO</strong> (horizon-based + depth-aware blur):
