@@ -106,7 +106,14 @@
           </li>
           <li>
             <strong>Anti-aliasing</strong> (<code>AntiAliasing.fx</code>): post-process edge-oriented AA.
-            <p>To test it, we turned off anti-aliasing in the game's graphics settings so that any edge smoothing comes from our shader alone.</p>
+            <p>Our single-pass FXAA-style shader compares luminance across a 3×3 pixel neighborhood to find high-contrast edges,
+            estimates whether each edge is horizontal or vertical, and shifts the final sample to smooth stair-step patterns.
+            Adjustable thresholds and subpixel smoothing balance stronger filtering against preserving fine texture detail.
+            To test it, we turned off anti-aliasing in the game's graphics settings so that any edge smoothing comes from our shader alone.</p>
+            <div class="implementation-preview">
+              <img src="../assets/milestone/web/aa-edge-detection.png"
+                alt="Anti-aliasing debug view with horizontal edges in red and vertical edges in blue" loading="lazy" />
+            </div>
           </li>
           <li>
             <strong>SSAO</strong> (horizon-based + depth-aware blur):
