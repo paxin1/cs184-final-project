@@ -1,13 +1,13 @@
 /* Milestone layout: load after style.css on milestone/index.html only. */
 
 body.milestone {
-  font-size: 16px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.36;
 }
 
 body.milestone .page {
   max-width: 58rem;
-  padding: 1.5rem 1.25rem 2rem;
+  padding: 1rem 1rem 1.25rem;
 }
 
 body.milestone header {
@@ -15,7 +15,7 @@ body.milestone header {
 }
 
 body.milestone h1 {
-  font-size: 1.75rem;
+  font-size: 1.4rem;
 }
 
 body.milestone .full-title {
@@ -27,35 +27,58 @@ body.milestone .team {
 }
 
 body.milestone h2 {
-  margin: 1.25rem 0 0.4rem;
-  font-size: 1.25rem;
-}
-
-body.milestone h3 {
-  margin: 0.85rem 0 0.35rem;
+  margin: 0.75rem 0 0.25rem;
   font-size: 1.05rem;
 }
 
+body.milestone .milestone-links {
+  margin: 0 0 0.45rem;
+  font-size: 0.92em;
+}
+
+body.milestone .milestone-links .link-sep {
+  margin: 0 0.4em;
+  color: #666;
+}
+
+body.milestone h3 {
+  margin: 0.65rem 0 0.28rem;
+  font-size: 1rem;
+}
+
 body.milestone h4 {
-  margin: 0.6rem 0 0.25rem;
-  font-size: 0.98rem;
+  margin: 0.45rem 0 0.2rem;
+  font-size: 0.95rem;
 }
 
 body.milestone p {
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.4rem;
 }
 
 body.milestone ul,
 body.milestone ol {
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.4rem;
 }
 
 body.milestone li {
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.12rem;
+}
+
+body.milestone ul.progress-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+body.milestone ul.progress-list > li {
+  margin-bottom: 0.55rem;
+}
+
+body.milestone ul.progress-list > li:last-child {
+  margin-bottom: 0.35rem;
 }
 
 body.milestone li p {
-  margin: 0.35rem 0 0.45rem;
+  margin: 0.15rem 0 0.28rem;
 }
 
 /* Comparisons: three columns on wide viewports */
@@ -103,20 +126,20 @@ body.milestone .implementation-figures .implementation-preview {
 
 body.milestone .implementation-preview {
   float: right;
-  width: 18rem;
-  max-width: 55%;
+  width: 13.5rem;
+  max-width: 48%;
   aspect-ratio: auto;
-  margin: 0 0 0.5rem 0.75rem;
+  margin: 0 0 0.3rem 0.5rem;
 }
 
 body.milestone .implementation-preview.implementation-pair {
-  width: 24rem;
-  max-width: 58%;
+  width: 18rem;
+  max-width: 52%;
 }
 
 body.milestone .implementation-preview.implementation-trio {
-  width: 28rem;
-  max-width: 62%;
+  width: 21rem;
+  max-width: 56%;
 }
 
 body.milestone .pair.pair-trio {
@@ -208,9 +231,9 @@ body.milestone .implementation-preview img {
 }
 
 body.milestone .impl-caption {
-  margin: 0.25rem 0 0;
-  font-size: 0.8rem;
-  line-height: 1.3;
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.25;
   color: #555;
   text-align: center;
 }
@@ -254,7 +277,8 @@ body.milestone li:has(.implementation-figures) {
 }
 
 body.milestone footer {
-  margin-top: 1.25rem;
+  margin-top: 0.85rem;
+  font-size: 0.92em;
   clear: both;
 }
 
@@ -269,8 +293,8 @@ body.milestone footer {
 
 @media print {
   body.milestone {
-    font-size: 9pt;
-    line-height: 1.32;
+    font-size: 7.5pt;
+    line-height: 1.26;
   }
 
   body.milestone .page {
@@ -279,20 +303,50 @@ body.milestone footer {
   }
 
   @page {
-    margin: 0.5in;
+    margin: 0.4in;
   }
 
   body.milestone h1 {
-    font-size: 14pt;
-  }
-
-  body.milestone h2 {
-    margin-top: 0.65rem;
     font-size: 11pt;
   }
 
+  body.milestone h2 {
+    margin-top: 0.3rem;
+    font-size: 9pt;
+  }
+
   body.milestone h3 {
-    font-size: 10pt;
+    font-size: 9pt;
+  }
+
+  body.milestone h4 {
+    font-size: 8.5pt;
+  }
+
+  body.milestone .milestone-links {
+    font-size: 8pt;
+    margin-bottom: 0.3rem;
+  }
+
+  body.milestone .implementation-preview {
+    width: 9.5rem;
+    max-width: 40%;
+  }
+
+  body.milestone .implementation-preview.implementation-pair {
+    width: 12.5rem;
+  }
+
+  body.milestone .implementation-preview.implementation-trio {
+    width: 14rem;
+  }
+
+  body.milestone .impl-caption {
+    font-size: 6.5pt;
+  }
+
+  body.milestone .lightbox-trigger {
+    cursor: default;
   }
 
   body.milestone main > figure.compare {
