@@ -7,13 +7,13 @@
     <title>Star Shaders · CS 184 Final Project Milestone</title>
     <link rel="canonical" href="https://paxin1.github.io/cs184-final-project/milestone" />
     <link rel="stylesheet" href="../css/style.css" />
+    <link rel="stylesheet" href="../css/milestone.css" />
   </head>
-  <body>
+  <body class="milestone">
     <div class="page">
       <header>
         <p class="course">CS 184 Final Project Milestone - Fall 2026</p>
         <h1>Star Shaders - Milestone Report</h1>
-        <p class="full-title">Stackable post-processing shaders for <em>Star Stable Online</em> in ReShade</p>
         <p class="team">Laura Nagamine, Patrick Xu, Elena Lepe, Oscar Mendoza-Oliva</p>
         <p class="team"><a href="https://docs.google.com/presentation/d/1GE0bZJxz_u8gDSBXUT69e3ShMPYBfy_DtkUFxXWe048/edit?usp=sharing">Milestone slides</a></p>
       </header>
@@ -21,88 +21,43 @@
       <main>
         <h2 id="summary">Summary</h2>
         <p>
-          At the milestone, we've wired ReShade into <em>Star Stable Online</em> along with other testing targets, confirmed that the game’s
-          depth buffer is available through ReShade, and routed it through our shared <code>Header.fxh</code> as linearized depth
-          (<code>SSO::Depth</code>) for effects and debug views. ReShade also only exposes the final rendered image from the game; for Star Stable Online and other testing target, this is a
+          At the milestone, we've wired ReShade into <em>Star Stable Online</em> along with other testing targets like <em>Muck</em>, confirmed that the game’s
+          depth buffer is available through ReShade, and routed it through our shared <code>Header.fxh</code> as linearized depth for effects and debug views.
+          ReShade also only exposes the final rendered image from the game; for Star Stable Online and Muck, this is a
           <strong>SDR color buffer</strong>. This, along with not being able to access contextually relevant scene information directly from the game like normals and light sources,
-          means we have to tweak our own effects to achieve a more realistic look. We’ve implemented the shared shader header and several baseline effects, including bloom, depth of field, anti-aliasing, and a color gradient. We've also started setting up a lookup table for color grading. 
+          means we have to tweak our own effects to achieve a more realistic look.
         </p>
 
         <h2 id="goals">Milestone Progress</h2>
-
-        <h3>Preliminary results</h3>
-        <ul>
-          <li><em>Milestone video:</em> </li>
-          <li><em>Screenshot set:</em> before/after captures from <em>Star Stable Online</em> at 2560×1600, ReShade effect off (left) vs. on (right). Click any image to open the full-resolution capture.</li>
-        </ul>
-
-        <figure class="compare">
-          <div class="pair">
-            <a href="../assets/milestone/bloom/no%20StarStable%202026-11-21%2012-39-15.png"><img src="../assets/milestone/web/bloom-off.jpg" alt="Forest scene with horse and rider, bloom off" loading="lazy" /></a>
-            <a href="../assets/milestone/bloom/with%20StarStable%202026-11-21%2012-39-17.png"><img src="../assets/milestone/web/bloom-on.jpg" alt="Same forest scene with bloom on" loading="lazy" /></a>
-          </div>
-          <figcaption>
-            <strong>Bloom.</strong> Bright, compact sources pick up a soft halo: the pink crystals and the
-            white blaze on the horse's face glow, while the screen-blend composite
-            lifts highlights without clipping them.
-          </figcaption>
-        </figure>
-
-        <figure class="compare">
-          <div class="pair">
-            <a href="../assets/milestone/depth%20of%20field/no%20StarStable%202026-11-19%2016-48-08.png"><img src="../assets/milestone/web/dof-off.jpg" alt="Horse and rider in a meadow, depth of field off" loading="lazy" /></a>
-            <a href="../assets/milestone/depth%20of%20field/with%20StarStable%202026-11-19%2016-48-13.png"><img src="../assets/milestone/web/dof-on.jpg" alt="Same meadow scene with depth of field on" loading="lazy" /></a>
-          </div>
-          <figcaption>
-            <strong>Depth of field.</strong> Focus is set on the horse and rider; the trees, hills and
-            sky behind them fall into a bokeh blur driven by the linearized depth from <code>Header.fxh</code>.
-          </figcaption>
-        </figure>
-
-        <figure class="compare">
-          <div class="pair">
-            <a href="../assets/milestone/anti%20aliasing/new/StarStable%202026-11-21%2012-31-40.png"><img src="../assets/milestone/web/aa-off.jpg" alt="Close-up of crystal formations, anti-aliasing off" loading="lazy" /></a>
-            <a href="../assets/milestone/anti%20aliasing/new/StarStable%202026-11-21%2012-31-48.png"><img src="../assets/milestone/web/aa-on.jpg" alt="Same crystal close-up with anti-aliasing on" loading="lazy" /></a>
-          </div>
-          <div class="pair">
-            <img class="pixelated" src="../assets/milestone/web/aa-off-zoom.png" alt="2x zoom of a crystal edge showing stair-stepped aliasing" loading="lazy" />
-            <img class="pixelated" src="../assets/milestone/web/aa-on-zoom.png" alt="Same 2x zoom with the edge smoothed by anti-aliasing" loading="lazy" />
-          </div>
-          <figcaption>
-            <strong>Anti-aliasing.</strong> Anti-aliasing is turned off in the game's graphics settings for both shots, so the
-            smoothing shown is from our shader only. The
-            2× nearest-neighbor zoom (bottom) of a crystal silhouette shows the stair-stepped edges being smoothed
-            by our edge-oriented pass, while interior texture detail is left intact.
-          </figcaption>
-        </figure>
-
-        <h3>Implementation status</h3>
         <ul>
           <li>
             <strong>Shared header</strong> (<code>Header.fxh</code>): linear/sRGB helpers, luminance, depth, debug views.
           </li>
           <li>
-            <strong>Bloom</strong> (<code>Bloom.fx</code>; processed in linear light via
-            <code>Header.fxh</code>):
-            <p>Native ReShade only exposes a SDR color buffer, so we implemented Bloom using a soft threshold-based bloom pass with a downsample/upsample mip pyramid.
-            Pixels above a threshold in luminance contribute to the bloom effect, with a soft knee function to soften the transition of the light into the bloom pass.</p>
-
-            <p>The bloom pass is spread through a 7 level mip pyramid as described in Jimenez's paper "Next Generation Post Processing in Call of Duty: Advanced Warfare".
-            The downsample uses a 13 tap downsample, which takes 13 samples from the 4x4 neighborhood around the pixel and averages them to get the downsampled value.
-            The upsample uses a 3x3 tent upsample, which averages the 9 samples in the 3x3 neighborhood as we travel back up the pyramid.
-            The bloom is then composited onto the scene using a screen blend so halos stay visible on a bright daytime sky,
-            lightening the overall scene without clipping.</p>
-
-            <p>Since we do not have access to light sources, we implemented extra tweaks to the bloom effect to help it look more realistic. Local contrast subtracts a blurred
-            neighborhood average before thresholding so compact lights (sun, stars) bloom more
-            than smooth bright regions (sky, clouds). Glow radius and large light source glow use different pyramid levels to boost the bloom effect for large and small light sources respectively.
-            Using the depth buffer, foreground bloom scales glow drawn over non-sky geometry and sky light boost strengthens bloom extracted from far-plane sky pixels.</p>
+            <strong>Bloom</strong> (<code>Bloom.fx</code>); processed in linear light
+            <p>Implemented Bloom using a soft threshold-based bloom pass with a 7 level mip pyramid with 13 tap downsample and 3 tap upsample.
+            Pixels above a threshold in luminance contribute to the bloom effect, with a soft knee function to soften the transition of the light into the bloom pass.The bloom is then composited onto the scene using a screen blend so halos stay visible on a bright daytime sky, lightening the overall scene without clipping. 
+            We do not have access to scene data, so we added local contrast, glow radius, and depth aware bloom to help it look more realistic.</p>
+            <div class="implementation-preview implementation-pair lightbox-group">
+              <div class="pair">
+                <button type="button" class="lightbox-trigger" data-src="../assets/milestone/bloom/muck%20without.png" aria-label="Compare bloom off and on"><img src="../assets/milestone/bloom/muck%20without.png" alt="Muck test scene, bloom off" loading="lazy" /></button>
+                <button type="button" class="lightbox-trigger" data-src="../assets/milestone/bloom/muck%20with.png" aria-label="Compare bloom off and on"><img src="../assets/milestone/bloom/muck%20with.png" alt="Muck test scene, bloom on" loading="lazy" /></button>
+              </div>
+              <p class="impl-caption">Off / on (Muck fallback target).</p>
+            </div>
           </li>
           <li>
             <strong>Depth of field</strong> (<code>DepthOfField.fx</code>): adjustable focus, gather-based bokeh blur.
             <p>A first pass computes a signed circle of confusion (CoC) per pixel from linearized depth, the focus distance, and the blur strength.
             A second pass gathers 64 samples in a golden-angle spiral disk, counting a sample only if its blur disk reaches the pixel,
             and clamps background samples so they don't bleed over a sharper foreground.</p>
+            <div class="implementation-preview implementation-pair lightbox-group">
+              <div class="pair">
+                <button type="button" class="lightbox-trigger" data-src="../assets/milestone/depth%20of%20field/no%20StarStable%202026-11-19%2016-48-08.png" aria-label="Compare depth of field off and on"><img src="../assets/milestone/web/dof-off.jpg" alt="Star Stable meadow, depth of field off" loading="lazy" /></button>
+                <button type="button" class="lightbox-trigger" data-src="../assets/milestone/depth%20of%20field/with%20StarStable%202026-11-19%2016-48-13.png" aria-label="Compare depth of field off and on"><img src="../assets/milestone/web/dof-on.jpg" alt="Star Stable meadow, depth of field on" loading="lazy" /></button>
+              </div>
+              <p class="impl-caption">Off / on (<em>Star Stable</em>).</p>
+            </div>
           </li>
           <li>
             <strong>Anti-aliasing</strong> (<code>AntiAliasing.fx</code>): post-process edge-oriented AA.
@@ -110,66 +65,38 @@
             estimates whether each edge is horizontal or vertical, and shifts the final sample to smooth stair-step patterns.
             Adjustable thresholds and subpixel smoothing balance stronger filtering against preserving fine texture detail.
             To test it, we turned off anti-aliasing in the game's graphics settings so that any edge smoothing comes from our shader alone.</p>
-            <div class="implementation-preview">
-              <img src="../assets/milestone/web/aa-edge-detection.png"
-                alt="Anti-aliasing debug view with horizontal edges in red and vertical edges in blue" loading="lazy" />
+            <div class="implementation-preview implementation-pair lightbox-group">
+              <div class="pair">
+                <button type="button" class="lightbox-trigger" data-src="../assets/milestone/anti%20aliasing/muck%20without%20close.png" aria-label="Compare anti-aliasing captures"><img src="../assets/milestone/anti%20aliasing/muck%20without%20close.png" alt="Muck close-up, anti-aliasing off" loading="lazy" /></button>
+                <button type="button" class="lightbox-trigger" data-src="../assets/milestone/anti%20aliasing/muck%20with%20cljose.png" aria-label="Compare anti-aliasing captures"><img src="../assets/milestone/anti%20aliasing/muck%20with%20cljose.png" alt="Muck close-up, anti-aliasing on" loading="lazy" /></button>
+              </div>
+              <p class="impl-caption">Off / on (Muck).</p>
             </div>
           </li>
           <li>
             <strong>Color grading</strong> (<code>ColorGrading.fx</code>): LUT-based color correction.
             <p>Color gradient and LUT color grading. We implemented a ReShade post-processing shader that applies a color gradient to the rendered frame. We also began setting up StarGradeLUT.png, a lookup table designed to map each pixel's 
             input RGB color to a graded output color. The next step is to test the LUT on a teammate's Windows setup and compare the same scene with grading enabled and disabled, 
-            keeping the camera and other shader settings fixed.
-          </li>
-          <li>
-            <strong>SSAO</strong> (horizon-based + depth-aware blur):
+            keeping the camera and other shader settings fixed.</p>
+            <div class="implementation-preview implementation-trio lightbox-group">
+              <div class="pair pair-trio">
+                <button type="button" class="lightbox-trigger" data-src="../assets/milestone/color%20grading/default.png" aria-label="Compare color grading LUTs"><img src="../assets/milestone/color%20grading/default.png" alt="Color grading LUT off (default)" loading="lazy" /></button>
+                <button type="button" class="lightbox-trigger" data-src="../assets/milestone/color%20grading/golden%20hour.png" aria-label="Compare color grading LUTs"><img src="../assets/milestone/color%20grading/golden%20hour.png" alt="Color grading with golden hour LUT" loading="lazy" /></button>
+                <button type="button" class="lightbox-trigger" data-src="../assets/milestone/color%20grading/cool%20dusk.png" aria-label="Compare color grading LUTs"><img src="../assets/milestone/color%20grading/cool%20dusk.png" alt="Color grading with cool dusk LUT" loading="lazy" /></button>
+              </div>
+              <p class="impl-caption">Default / golden hour / cool dusk (Muck).</p>
+            </div>
           </li>
         </ul>
 
         <h2 id="plan">Updated Plan</h2>
-        <h3>(1) Baseline plan</h3>
 
         <h4>Completed</h4>
-        <ul>
-          <li>
-            <strong>Shared header</strong> (<code>Header.fxh</code>): linear/sRGB, luminance, linearized depth, debug views.
-          </li>
-          <li>
-            <strong>Bloom</strong> (<code>Bloom.fx</code>, <code>Bloom.md</code>): thresholded bright pass,
-            Jimenez 13-tap / tent mip pyramid, optional starburst, depth-aware sky/foreground controls,
-            screen-blend composite.
-          </li>
-          <li><strong>Depth of field</strong> (<code>DepthOfField.fx</code>): adjustable focus, gather-based bokeh.</li>
-          <li><strong>Anti-aliasing</strong> (<code>AntiAliasing.fx</code>): FXAA/SMAA style edge detection.</li>
-          <li><strong>Color grading</strong> (<code>ColorGrading.fx</code>): LUT-based color correction.</li>
-          <li>Milestone demo and comparison images.</li>
-        </ul>
-
+          <p></p>We've completed many of the baseline plan shaders, including all but one of the baseline effects as well as the shared header to hook into the color, luminance, and depth of the final rendered image from the game.
+          Apart from the learning curve of working with ReShade and its language, we also ran into some issues with the lack of intermediate scene data - since ReShade only exposes the final rendered image from the game, we have to tweak our own effects to achieve a more realistic look.</p>
         <h4>Still to do (baseline)</h4>
-        <ul>
-          <li>SSAO (horizon-based) with a depth-aware blur; bring up to the same shared-header stack as the other effects.</li>
-          <li>Tonemapping, LUT color grading, vignette, and film grain (graded on LDR back buffer, not engine HDR).</li>
-          <li>
-            In-game tuning and documentation: Star Stable depth access, bloom/DoF/AA quality vs. performance, artifact notes (UI, clouds, pause).
-          </li>
-          <li>At least three presets that combine passes in different orders and intensities.</li>
-          <li>Final demo and comparison images, performance numbers, and the final writeup.</li>
-        </ul>
-
-        <h3>(2) Aspirational plan</h3>
-        <ul>
-          <li>Screen-space GI: ray march the depth buffer for one bounce of indirect color</li>
-          <li>Volumetric fog and light shafts, maybe with animated noise for mist or clouds</li>
-          <li>Temporal accumulation so AO/GI can use fewer samples per frame</li>
-          <li>
-            A ReShade add-on (or fork) that exposes more than color and depth, like normals or HDR
-            color. We'd only try this on an offline test target.
-          </li>
-          <li>
-            Second-game profile: support one fallback game with a saved profile + depth definitions + default preset. Measure
-            how much preset reuse is possible versus per-game retuning, optionally with a helper to apply saved profiles.
-          </li>
-        </ul>
+          <p>We still need to implement multiple shaders (namely SSAO, vignette, and film grain), create the UI masks for both testing games, as well as generate different presets that combine passes in different orders and intensities.
+            Another major task is to test performance of the effects and presets, zeroing in on which passes are most impactful, which are least impactful, and what optimizations can be made to improve performance.</p>
       </main>
 
       <footer>
@@ -178,5 +105,94 @@
         <a href="https://github.com/lauranagamine1/cs184-star-shaders">Source on GitHub</a>
       </footer>
     </div>
+
+    <dialog id="image-lightbox" class="image-lightbox" aria-label="Screenshot comparison">
+      <button type="button" class="lightbox-close" aria-label="Close">×</button>
+      <div class="lightbox-compare"></div>
+    </dialog>
+    <script>
+      (function () {
+        var dialog = document.getElementById("image-lightbox");
+        var compareEl = dialog.querySelector(".lightbox-compare");
+        var closeBtn = dialog.querySelector(".lightbox-close");
+        var savedScrollY = 0;
+
+        function lockPageScroll() {
+          savedScrollY = window.scrollY;
+          document.documentElement.classList.add("lightbox-open");
+          document.body.style.setProperty("--lightbox-scroll", savedScrollY + "px");
+        }
+
+        function unlockPageScroll() {
+          document.documentElement.classList.remove("lightbox-open");
+          document.body.style.removeProperty("--lightbox-scroll");
+          window.scrollTo(0, savedScrollY);
+        }
+
+        function restoreScrollSoon() {
+          requestAnimationFrame(function () {
+            window.scrollTo(0, savedScrollY);
+          });
+        }
+
+        function collectImages(btn) {
+          var group = btn.closest(".lightbox-group");
+          var triggers = group ? group.querySelectorAll(".lightbox-trigger") : [btn];
+          var images = [];
+          triggers.forEach(function (trigger) {
+            var thumb = trigger.querySelector("img");
+            images.push({
+              src: trigger.getAttribute("data-src"),
+              alt: thumb ? thumb.alt : "",
+            });
+          });
+          return images;
+        }
+
+        function openLightbox(images) {
+          compareEl.innerHTML = "";
+          dialog.style.setProperty("--lightbox-cols", String(images.length));
+          images.forEach(function (item) {
+            var img = document.createElement("img");
+            img.src = item.src;
+            img.alt = item.alt;
+            compareEl.appendChild(img);
+          });
+          lockPageScroll();
+          if (typeof dialog.showModal === "function") {
+            dialog.showModal();
+          } else {
+            dialog.setAttribute("open", "");
+          }
+          restoreScrollSoon();
+        }
+
+        document.querySelectorAll(".lightbox-trigger").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            openLightbox(collectImages(btn));
+          });
+        });
+
+        function closeLightbox() {
+          if (dialog.open) {
+            dialog.close();
+          } else {
+            dialog.removeAttribute("open");
+            unlockPageScroll();
+            compareEl.innerHTML = "";
+          }
+        }
+
+        closeBtn.addEventListener("click", closeLightbox);
+        dialog.addEventListener("click", function (e) {
+          if (e.target === dialog) closeLightbox();
+        });
+        dialog.addEventListener("close", function () {
+          compareEl.innerHTML = "";
+          unlockPageScroll();
+        });
+      })();
+    </script>
   </body>
 </html>

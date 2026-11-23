@@ -8,5 +8,4 @@ Berkeley CS 184 final project proposal
 
 ## ReShade shaders
 
-Effect implementations (`.fx`, shared `Header.fxh`, presets): [cs184-star-shaders](https://github.com/lauranagamine1/cs184-star-shaders).
-
+Shader implementations: [cs184-star-shaders](https://github.com/lauranagamine1/cs184-star-shaders).
