@@ -25,7 +25,7 @@
           depth buffer is available through ReShade, and routed it through our shared <code>Header.fxh</code> as linearized depth
           (<code>SSO::Depth</code>) for effects and debug views. ReShade also only exposes the final rendered image from the game; for Star Stable Online and other testing target, this is a
           <strong>SDR color buffer</strong>. This, along with not being able to access contextually relevant scene information directly from the game like normals and light sources,
-          means we have to tweak our own effects to achieve a more realistic look. Nevertheless, we've implemented shared header and baseline effects from the proposal: Bloom, Depth of Field, and Anti-aliasing.
+          means we have to tweak our own effects to achieve a more realistic look. We’ve implemented the shared shader header and several baseline effects, including bloom, depth of field, anti-aliasing, and a color gradient. We've also started setting up a lookup table for color grading. 
         </p>
 
         <h2 id="goals">Milestone Progress</h2>
@@ -116,6 +116,12 @@
             </div>
           </li>
           <li>
+            <strong>Color grading</strong> (<code>ColorGrading.fx</code>): LUT-based color correction.
+            <p>Color gradient and LUT color grading. We implemented a ReShade post-processing shader that applies a color gradient to the rendered frame. We also began setting up StarGradeLUT.png, a lookup table designed to map each pixel's 
+            input RGB color to a graded output color. The next step is to test the LUT on a teammate's Windows setup and compare the same scene with grading enabled and disabled, 
+            keeping the camera and other shader settings fixed.
+          </li>
+          <li>
             <strong>SSAO</strong> (horizon-based + depth-aware blur):
           </li>
         </ul>
@@ -135,6 +141,7 @@
           </li>
           <li><strong>Depth of field</strong> (<code>DepthOfField.fx</code>): adjustable focus, gather-based bokeh.</li>
           <li><strong>Anti-aliasing</strong> (<code>AntiAliasing.fx</code>): FXAA/SMAA style edge detection.</li>
+          <li><strong>Color grading</strong> (<code>ColorGrading.fx</code>): LUT-based color correction.</li>
           <li>Milestone demo and comparison images.</li>
         </ul>
 
